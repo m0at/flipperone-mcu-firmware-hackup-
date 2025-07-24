@@ -72,41 +72,37 @@ public:
         st7735s_initialize_new();
     }
 
-    void write_buffer(const uint16_t* buffer) {
-        write_buffer(width, height, buffer, width * height * sizeof(uint16_t));
+    void write_buffer(const uint8_t* buffer) {
+        write_buffer(width, height, buffer, width * height);
     }
 
-    void write_buffer(uint16_t w, uint16_t h, const uint16_t* buffer, size_t size) {
-        set_window(offset_x, offset_y, offset_x + w - 1, offset_y + h - 1);
+    void write_buffer(uint16_t w, uint16_t h, const uint8_t* buffer, size_t size) {
+        set_window(offset_x, offset_y, offset_x + (w / 3) - 1, offset_y + h - 1);
         write_command(CMD::RAMWR);
 
-        spi_set_format(spi, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
         cs(false);
         dc(true);
-        spi_write16_blocking(spi, buffer, size / 2);
+        spi_write_blocking(spi, buffer, size);
         cs(true);
-        spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
 
-    void fill(uint16_t color) {
-        uint16_t data[width];
+    void fill(uint8_t color) {
+        uint8_t data[width];
         for(size_t i = 0; i < width; i++) {
             data[i] = color;
         }
 
-        set_window(offset_x, offset_y, offset_x + width - 1, offset_y + height - 1);
+        set_window(offset_x, offset_y, offset_x + (width / 3) - 1, offset_y + height - 1);
         write_command(CMD::RAMWR);
 
-        spi_set_format(spi, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
         cs(false);
         dc(true);
 
         for(size_t j = 0; j < height; j++) {
-            spi_write16_blocking(spi, data, width);
+            spi_write_blocking(spi, data, width);
         }
 
         cs(true);
-        spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
 
     void eco_mode(bool enable) {
@@ -295,8 +291,8 @@ private:
 
         // 10.1.33 COLMOD (3Ah): Interface Pixel Format
         write_command(CMD::COLMOD);
-        // write_data(0b00000110); // IFPF: 0b110/18 bit per pixel
-        write_data(0b00000101); // IFPF: 0b101/16 bit per pixel
+        write_data(0b00000110); // IFPF: 0b110/18 bit per pixel
+        // write_data(0b00000101); // IFPF: 0b101/16 bit per pixel
 
         // // Gamma correction and curves
         // // 10.2.17 GMCTRP1 (E0h): Gamma (‘+’polarity) Correction Characteristics Setting
