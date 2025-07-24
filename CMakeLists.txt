@@ -48,6 +48,7 @@ add_executable(one-rp2350-control
 target_compile_definitions(one-rp2350-control PRIVATE 
     PICO_DEFAULT_UART_TX_PIN=0
     PICO_DEFAULT_UART_RX_PIN=1
+    PICO_DEFAULT_UART_BAUD_RATE=230400
     PARAM_ASSERTIONS_ENABLE_ALL=1
     USE_PRINTF
     USE_DBG_PRINTF
