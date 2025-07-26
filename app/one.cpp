@@ -4,20 +4,38 @@
 #include <drivers/ws2812_strip.hpp>
 #include <ws2812.h>
 #include <string.h>
+#include <hardware/gpio.h>
+#include <initializer_list>
 
 #define WS2812_GPIO  2
-#define WS2812_COUNT 15
+#define WS2812_COUNT 16
 
 #define D_PIN_SDA   7
 #define D_PIN_SCL   6
 #define D_PIN_CTRL  8
-#define D_PIN_CS    9
-#define D_PIN_WR    10
-#define D_PIN_RESET 11
+#define D_PIN_CS    3
+#define D_PIN_WR    4
+#define D_PIN_RESET 5
 #define D_OFF_X     77
 #define D_OFF_Y     0
 #define D_WIDTH     258
 #define D_HEIGHT    144
+
+#define B_KEY1       9
+#define B_KEY2       10
+#define B_KEY3       11
+#define B_KEY4       12
+#define B_KEY5       13
+#define B_KEY_SW     14
+#define B_KEY_UP     15
+#define B_KEY_LEFT   16
+#define B_KEY_CENTER 17
+#define B_KEY_RIGHT  18
+#define B_KEY_DOWN   19
+#define B_KEY_BACK   20
+
+#define BAT_CHARGING_GPIO   24
+#define BAT_CHARGE_ADC_GPIO 29
 
 typedef enum {
     Power,
@@ -25,7 +43,21 @@ typedef enum {
     WiFi,
     Lan2,
     Lan1,
+    USBPlug,
+    USBWatt1,
+    USBWatt2,
+    USBWatt3,
+    USBWatt4,
+    BatteryCenter,
+    BatteryOutline,
+    BatteryWatt1,
+    BatteryWatt2,
+    BatteryWatt3,
+    BatteryWatt4,
+    Max,
 } LedType;
+
+static_assert(Max == WS2812_COUNT, "WS2812 strip count does not match LedType enum");
 
 void set_pixel_color(uint8_t* buffer, int32_t x, int32_t y, uint8_t color) {
     if(x >= D_WIDTH || y >= D_HEIGHT || x < 0 || y < 0) {
@@ -82,71 +114,93 @@ void test_plasma_draw(uint8_t* buffer) {
     c2B -= 1; // 3;
 }
 
+static void gpio_irq_callback(uint gpio, uint32_t event_mask) {
+    Log::info("GPIO %d event: %d", gpio, event_mask);
+}
+
 int main() {
     Log::init();
 
     WS2812Strip<WS2812_GPIO, LedType, WS2812_COUNT> strip;
     strip.init();
-    strip.set_rgb_all({6, 2, 0});
-    strip.set_rgb(LedType::Power, {0, 5, 0});
-    strip.set_rgb(LedType::Unknown, {5, 0, 0});
-    strip.set_rgb(LedType::WiFi, {5, 0, 0});
-    strip.set_rgb(LedType::Lan2, {5, 0, 0});
-    strip.set_rgb(LedType::Lan1, {5, 0, 0});
+    strip.set_brightness(0.02f);
+    strip.set_rgb_all({0, 0, 0});
+    strip.set_rgb(LedType::Power, WS2812Colors::green);
+    strip.set_rgb(LedType::Unknown, WS2812Colors::light_blue);
+    strip.set_rgb(LedType::WiFi, WS2812Colors::light_blue);
+    strip.set_rgb(LedType::Lan2, WS2812Colors::light_blue);
+    strip.set_rgb(LedType::Lan1, WS2812Colors::light_blue);
+    strip.set_rgb(LedType::BatteryOutline, WS2812Colors::green);
+    strip.set_rgb(LedType::BatteryWatt1, WS2812Colors::green);
+    strip.set_rgb(LedType::BatteryWatt2, WS2812Colors::yellow);
+    strip.set_rgb(LedType::BatteryWatt3, WS2812Colors::orange);
+    strip.set_rgb(LedType::BatteryWatt4, WS2812Colors::red);
     strip.flush();
 
     Display<D_PIN_CTRL, D_PIN_RESET, D_PIN_CS, D_PIN_SCL, D_PIN_SDA, D_PIN_WR, D_OFF_X, D_OFF_Y, D_WIDTH, D_HEIGHT> display;
     display.init();
     // display.backlight(0.04f);
+    display.backlight(0.2f);
     // display.backlight(0.4f);
-    display.backlight(1.0f);
+    // display.backlight(1.0f);
 
     const size_t buffer_size = D_WIDTH * D_HEIGHT;
-    uint8_t buffer_checker_8px[buffer_size];
-    uint8_t buffer_checker_8px_neg[buffer_size];
-
-    memset(buffer_checker_8px, 0x00, buffer_size);
-    memset(buffer_checker_8px_neg, 0xFF, buffer_size);
-
-    for(size_t y = 0; y < D_HEIGHT; y++) {
-        for(size_t x = 0; x < D_WIDTH * 3; x++) {
-            uint8_t color = ((x / 8) + (y / 8)) % 2 ? 0xFF : 0x00;
-            set_pixel_color(buffer_checker_8px, x, y, color);
-            set_pixel_color(buffer_checker_8px_neg, x, y, ~color & 0xFF);
-        }
-    }
+    uint8_t buffer[buffer_size];
 
     display.eco_mode(false);
 
+    gpio_set_irq_callback(&gpio_irq_callback);
+
+    std::initializer_list<uint32_t> keys = {
+        BAT_CHARGING_GPIO,
+        B_KEY1,
+        B_KEY2,
+        B_KEY3,
+        B_KEY4,
+        B_KEY5,
+        B_KEY_SW,
+        B_KEY_UP,
+        B_KEY_LEFT,
+        B_KEY_CENTER,
+        B_KEY_RIGHT,
+        B_KEY_DOWN,
+        B_KEY_BACK,
+    };
+    for(auto key : keys) {
+        gpio_init(key);
+        gpio_set_dir(key, GPIO_IN);
+        gpio_set_pulls(key, false, false);
+        gpio_set_input_hysteresis_enabled(key, true);
+        gpio_set_irq_enabled(key, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+    }
+    irq_set_enabled(IO_IRQ_BANK0, true);
+
     while(true) {
-        // display.write_buffer(buffer_checker_8px);
-        // for(size_t i = 0; i < 5; i++) {
-        //     sleep_ms(100);
-        //     strip.set_rgb(LedType::Lan1, {0, 0, 0});
-        //     strip.flush();
-        //     sleep_ms(100);
-        //     strip.set_rgb(LedType::Lan1, {5, 5, 0});
-        //     strip.flush();
-        // }
-
-        // display.write_buffer(buffer_checker_8px_neg);
-        // for(size_t i = 0; i < 5; i++) {
-        //     sleep_ms(100);
-        //     strip.set_rgb(LedType::Lan1, {0, 0, 0});
-        //     strip.flush();
-        //     sleep_ms(100);
-        //     strip.set_rgb(LedType::Lan1, {5, 5, 0});
-        //     strip.flush();
-        // }
-
-        test_plasma_draw(buffer_checker_8px);
-        for(size_t i = 0; i < 64; i++) {
-            for(size_t y = 0; y < D_HEIGHT; y++) {
-                set_pixel_color(buffer_checker_8px, i, y, i << 2);
+        test_plasma_draw(buffer);
+        for(size_t x = 0; x < 64; x++) {
+            for(size_t y = 0; y < D_HEIGHT / 2; y++) {
+                uint32_t color = x;
+                set_pixel_color(buffer, x, y, color << 2);
             }
         }
 
-        display.write_buffer(buffer_checker_8px);
-        sleep_ms(1000);
+        display.write_buffer(buffer);
+
+        if(gpio_get(BAT_CHARGING_GPIO)) {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::green);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::yellow);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::orange);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::red);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::green);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::green);
+        } else {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::black);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::black);
+        }
+        strip.flush();
     }
 }

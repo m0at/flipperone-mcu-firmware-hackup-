@@ -25,44 +25,56 @@ public:
     }
 
     void init(void) {
-        uint freq = spi_init(spi, 75 * 1000 * 1000);
+        uint freq = spi_init(spi, 1 * 1000 * 1000);
         Log::info("SPI%d initialized with frequency: %.2f MHz", SPI_NUM(spi), freq / 1000000.0f);
         spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
 
         gpio_set_function(pin_clock, GPIO_FUNC_SPI);
         gpio_set_function(pin_data, GPIO_FUNC_SPI);
 
+        gpio_set_drive_strength(pin_clock, GPIO_DRIVE_STRENGTH_12MA);
+        gpio_set_slew_rate(pin_clock, GPIO_SLEW_RATE_FAST);
+
+        gpio_set_drive_strength(pin_data, GPIO_DRIVE_STRENGTH_12MA);
+        gpio_set_slew_rate(pin_data, GPIO_SLEW_RATE_FAST);
+
         gpio_init(pin_cs);
         gpio_set_dir(pin_cs, GPIO_OUT);
+        gpio_set_drive_strength(pin_cs, GPIO_DRIVE_STRENGTH_12MA);
+        gpio_set_slew_rate(pin_cs, GPIO_SLEW_RATE_FAST);
 
         gpio_init(pin_dc);
         gpio_set_dir(pin_dc, GPIO_OUT);
+        gpio_set_drive_strength(pin_dc, GPIO_DRIVE_STRENGTH_12MA);
+        gpio_set_slew_rate(pin_dc, GPIO_SLEW_RATE_FAST);
 
         gpio_init(pin_reset);
         gpio_set_dir(pin_reset, GPIO_OUT);
+        gpio_set_drive_strength(pin_reset, GPIO_DRIVE_STRENGTH_12MA);
+        gpio_set_slew_rate(pin_reset, GPIO_SLEW_RATE_FAST);
 
         cs(true);
         dc(false);
 
         // reset sequence
-        reset(true);
-        sleep_ms(5);
+        reset(false);
+        sleep_ms(10);
         reset(false);
         sleep_ms(5);
         reset(true);
         sleep_ms(5);
 
         write_command(CMD::SWRESET); // Software reset
-        sleep_ms(5);
+        sleep_ms(6);
 
-        write_command(CMD::SLPOUT); // Sleep out
-        sleep_ms(5);
+        // write_command(CMD::SLPOUT); // Sleep out
+        // sleep_ms(120);
 
         // st7789s_initialize_bad_gamma();
         // st7789s_initialize_2025_01_16();
         // st7789s_initialize_2025_04_01();
         st7789s_initialize_2025_04_01_edited();
-
+        spi_set_baudrate(spi, 75 * 1000 * 1000);
         initialized = true;
     }
 
@@ -108,7 +120,7 @@ public:
     }
 
 private:
-    PWMOutput<pin_backlight, 8, 3, false> backlight_pwm;
+    PWMOutput<pin_backlight, 8, 300, false> backlight_pwm;
     spi_inst_t* spi = spi0;
     bool initialized = false;
 
@@ -432,9 +444,10 @@ private:
         SSD_CMD(0xC5);
         SSD_PAR(0x01);
 
-        //GAMMA_POWER_TEST
-        SSD_CMD(0xBE);
-        SSD_PAR(0x00);
+        // This fucks up the display (fast vertical lines)
+        // //GAMMA_POWER_TEST
+        // SSD_CMD(0xBE);
+        // SSD_PAR(0x00);
 
         //page2
         SSD_CMD(0xDE);
@@ -455,23 +468,23 @@ private:
         SSD_CMD(0x3A);
         SSD_PAR(0x06); //0x06=RGB666  0x05=RGB565
 
-        SSD_CMD(0x2A);
-        SSD_PAR(0x00);
-        SSD_PAR(0x4D); //Start
-        SSD_PAR(0x00);
-        SSD_PAR(0xA2); //End
+        // SSD_CMD(0x2A);
+        // SSD_PAR(0x00);
+        // SSD_PAR(0x4D); //Start
+        // SSD_PAR(0x00);
+        // SSD_PAR(0xA2); //End
 
-        SSD_CMD(0x2B);
-        SSD_PAR(0x00);
-        SSD_PAR(0x00); //Start
-        SSD_PAR(0x00);
-        SSD_PAR(0x8F); //End
+        // SSD_CMD(0x2B);
+        // SSD_PAR(0x00);
+        // SSD_PAR(0x00); //Start
+        // SSD_PAR(0x00);
+        // SSD_PAR(0x8F); //End
 
         SSD_CMD(0x11);
         Delayms(120);
 
         SSD_CMD(0x29);
-        Delayms(50);
+        // Delayms(50);
     }
 
     void st7789s_initialize_2025_04_01(void) {
