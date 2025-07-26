@@ -24,7 +24,7 @@ public:
         for(auto key : keys) {
             gpio_init(key);
             gpio_set_dir(key, GPIO_IN);
-            gpio_set_pulls(key, false, false);
+            gpio_disable_pulls(key);
             gpio_set_input_hysteresis_enabled(key, true);
             gpio_set_irq_enabled(key, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
         }

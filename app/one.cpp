@@ -5,6 +5,7 @@
 #include <drivers/keys.hpp>
 #include <string.h>
 #include <hardware/gpio.h>
+#include <hardware/adc.h>
 #include <initializer_list>
 
 #include "FreeRTOS.h"
@@ -37,8 +38,10 @@
 #define B_KEY_DOWN   19
 #define B_KEY_BACK   20
 
-#define BAT_CHARGING_GPIO   24
-#define BAT_CHARGE_ADC_GPIO 29
+#define BAT_CHARGING_GPIO       24
+#define BAT_CHARGE_ADC_GPIO     29
+#define PICO_FIRST_ADC_PIN      26
+#define PICO_POWER_SAMPLE_COUNT 300
 
 typedef enum {
     Power,
@@ -120,11 +123,157 @@ void test_plasma_draw(uint8_t* buffer) {
 
 const size_t buffer_size = D_WIDTH * D_HEIGHT;
 uint8_t buffer[buffer_size];
+WS2812Strip<WS2812_GPIO, LedType, WS2812_COUNT> strip;
+Display<D_PIN_CTRL, D_PIN_RESET, D_PIN_CS, D_PIN_SCL, D_PIN_SDA, D_PIN_WR, D_OFF_X, D_OFF_Y, D_WIDTH, D_HEIGHT> display;
+volatile bool charging = false;
 
-static void main_task(void* arg) {
+static void task_charge(void* arg) {
+    Log::info("Starting charge task...");
+
+    adc_init();
+    adc_gpio_init(BAT_CHARGE_ADC_GPIO);
+    adc_select_input(BAT_CHARGE_ADC_GPIO - PICO_FIRST_ADC_PIN);
+
+    adc_fifo_setup(true, false, 0, false, false);
+    adc_run(true);
+
+    // We seem to read low values initially - this seems to fix it
+    int ignore_count = PICO_POWER_SAMPLE_COUNT;
+    while(!adc_fifo_is_empty() || ignore_count-- > 0) {
+        (void)adc_fifo_get_blocking();
+    }
+
+    while(true) {
+        // read vsys
+        float vsys = 0.0f;
+        for(int i = 0; i < PICO_POWER_SAMPLE_COUNT; i++) {
+            uint16_t val = adc_fifo_get_blocking();
+            vsys += val;
+        }
+        vsys /= (PICO_POWER_SAMPLE_COUNT);
+
+        const float conversion_factor = 9.0f * 3.3f / (1 << 12); // 3.3V reference, 12-bit ADC
+        const float battery = vsys * conversion_factor;
+        const float min_battery_voltage = 3.0f;
+        const float max_battery_voltage = 4.2f;
+        const float battery_range = max_battery_voltage - min_battery_voltage;
+        const float battery_percentage = (battery - min_battery_voltage) / battery_range;
+
+        Log::info("Battery percentage: %.2f%%", battery_percentage * 100.0f);
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+static void task_charging(void* arg) {
+    Log::info("Starting charging task...");
+
+    while(true) {
+        if(charging) {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::green);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::green);
+            strip.flush();
+        } else {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::black);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::black);
+            strip.flush();
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(200));
+
+        if(charging) {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::green);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::green);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::green);
+            strip.flush();
+        } else {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::black);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::black);
+            strip.flush();
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(200));
+
+        if(charging) {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::green);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::yellow);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::green);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::green);
+            strip.flush();
+        } else {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::black);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::black);
+            strip.flush();
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(200));
+
+        if(charging) {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::green);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::yellow);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::orange);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::green);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::green);
+            strip.flush();
+        } else {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::black);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::black);
+            strip.flush();
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(200));
+
+        if(charging) {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::green);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::yellow);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::orange);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::red);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::green);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::green);
+            strip.flush();
+        } else {
+            strip.set_rgb(LedType::USBWatt1, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt2, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
+            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
+            strip.set_rgb(LedType::USBPlug, WS2812Colors::black);
+            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::black);
+            strip.flush();
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+}
+
+static void task_main(void* arg) {
     Log::info("Starting main task...");
 
-    WS2812Strip<WS2812_GPIO, LedType, WS2812_COUNT> strip;
     strip.init();
     strip.set_brightness(0.02f);
     strip.set_rgb_all({0, 0, 0});
@@ -140,7 +289,6 @@ static void main_task(void* arg) {
     strip.set_rgb(LedType::BatteryWatt4, WS2812Colors::red);
     strip.flush();
 
-    Display<D_PIN_CTRL, D_PIN_RESET, D_PIN_CS, D_PIN_SCL, D_PIN_SDA, D_PIN_WR, D_OFF_X, D_OFF_Y, D_WIDTH, D_HEIGHT> display;
     display.init();
     // display.backlight(0.04f);
     // display.backlight(0.2f);
@@ -169,6 +317,9 @@ static void main_task(void* arg) {
     int32_t x_pos = 0;
     int32_t y_pos = 0;
 
+    xTaskCreate(task_charging, "task_charging", 256, NULL, configMAX_PRIORITIES - 1, NULL);
+    xTaskCreate(task_charge, "task_charge", 256, NULL, configMAX_PRIORITIES - 1, NULL);
+
     while(true) {
         test_plasma_draw(buffer);
         for(size_t x = 0; x < 64; x++) {
@@ -192,23 +343,13 @@ static void main_task(void* arg) {
         // }
 
         if(info.released.contains(BAT_CHARGING_GPIO)) {
-            strip.set_rgb(LedType::USBWatt1, WS2812Colors::green);
-            strip.set_rgb(LedType::USBWatt2, WS2812Colors::yellow);
-            strip.set_rgb(LedType::USBWatt3, WS2812Colors::orange);
-            strip.set_rgb(LedType::USBWatt4, WS2812Colors::red);
-            strip.set_rgb(LedType::USBPlug, WS2812Colors::green);
-            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::green);
-            strip.flush();
+            charging = true;
+            Log::info("Charger connected");
         }
 
         if(info.pressed.contains(BAT_CHARGING_GPIO)) {
-            strip.set_rgb(LedType::USBWatt1, WS2812Colors::black);
-            strip.set_rgb(LedType::USBWatt2, WS2812Colors::black);
-            strip.set_rgb(LedType::USBWatt3, WS2812Colors::black);
-            strip.set_rgb(LedType::USBWatt4, WS2812Colors::black);
-            strip.set_rgb(LedType::USBPlug, WS2812Colors::black);
-            strip.set_rgb(LedType::BatteryCenter, WS2812Colors::black);
-            strip.flush();
+            charging = false;
+            Log::info("Charger disconnected");
         }
 
         if(info.state.contains(B_KEY_UP)) {
@@ -231,13 +372,14 @@ static void main_task(void* arg) {
         set_pixel_color(buffer, x_pos, y_pos - 1, 0xFF); // Set the pixel above to white
 
         display.write_buffer(buffer);
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
 int main() {
     Log::init();
 
-    xTaskCreate(main_task, "main_task", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
+    xTaskCreate(task_main, "task_main", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
 
     vTaskStartScheduler();
 
