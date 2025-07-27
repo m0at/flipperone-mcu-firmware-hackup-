@@ -13,8 +13,8 @@ target_sources(${PROJECT_NAME} INTERFACE
 )
 
 target_link_libraries(${PROJECT_NAME} INTERFACE
-        hardware_pio
-        )
+    hardware_pio
+)
 
 target_include_directories(${PROJECT_NAME} INTERFACE ${INCLUDES})
 

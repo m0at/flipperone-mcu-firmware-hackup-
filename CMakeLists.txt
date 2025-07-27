@@ -69,6 +69,7 @@ target_include_directories(one-rp2350-control PRIVATE
 
 add_subdirectory(lib/ws2812)
 add_subdirectory(lib/freertos)
+add_subdirectory(lib/lvgl)
 
 # Add the standard library to the build
 target_link_libraries(one-rp2350-control
@@ -79,6 +80,7 @@ target_link_libraries(one-rp2350-control
     hardware_adc
     ws2812
     freertos
+    lvgl_lib
 )
 
 

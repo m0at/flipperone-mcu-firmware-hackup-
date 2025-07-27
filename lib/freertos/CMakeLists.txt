@@ -20,8 +20,8 @@ target_include_directories(${PROJECT_NAME} INTERFACE ${INCLUDES})
 add_subdirectory(FreeRTOS-Kernel/portable/ThirdParty/GCC/RP2350_ARM_NTZ)
 
 target_link_libraries(${PROJECT_NAME} INTERFACE
-        FreeRTOS-Kernel
-        )
+    FreeRTOS-Kernel
+)
 
 
 
