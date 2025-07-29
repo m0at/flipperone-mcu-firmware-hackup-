@@ -630,16 +630,13 @@
  *  @endcode
  */
 #define LV_FONT_CUSTOM_DECLARE \
-    LV_FONT_DECLARE(lv_font_tiny_6) \
-    LV_FONT_DECLARE(lv_font_tiny5_8) \
-    LV_FONT_DECLARE(lv_font_cubic_12) \
-    LV_FONT_DECLARE(lv_font_somybmp_7) \
-    LV_FONT_DECLARE(lv_font_ark_numerals_small_10) \
-    LV_FONT_DECLARE(lv_font_ark_numerals_regular_10) \
-    LV_FONT_DECLARE(lv_font_ark_numerals_condensed_10)
+    LV_FONT_DECLARE(lv_font_helvetica_bold_12) \
+    LV_FONT_DECLARE(lv_font_profont_12) \
+    LV_FONT_DECLARE(lv_font_profont_24) \
+    LV_FONT_DECLARE(lv_font_haxrcorp4089_16) 
 
 /** Always set a default font */
-#define LV_FONT_DEFAULT &lv_font_cubic_12
+#define LV_FONT_DEFAULT &lv_font_haxrcorp4089_16
 
 /** Enable handling large font and/or fonts with a lot of characters.
  *  The limit depends on the font size, font face and bpp.
@@ -812,23 +809,23 @@
 /* Documentation for themes can be found here: https://docs.lvgl.io/master/details/common-widget-features/styles/styles.html#themes . */
 
 /** A simple, impressive and very complete theme */
-#define LV_USE_THEME_DEFAULT 1
+#define LV_USE_THEME_DEFAULT 0
 #if LV_USE_THEME_DEFAULT
     /** 0: Light mode; 1: Dark mode */
     #define LV_THEME_DEFAULT_DARK 0
 
     /** 1: Enable grow on press */
-    #define LV_THEME_DEFAULT_GROW 1
+    #define LV_THEME_DEFAULT_GROW 0
 
     /** Default transition time in ms. */
     #define LV_THEME_DEFAULT_TRANSITION_TIME 80
 #endif /*LV_USE_THEME_DEFAULT*/
 
 /** A very simple theme that is a good starting point for a custom theme */
-#define LV_USE_THEME_SIMPLE 1
+#define LV_USE_THEME_SIMPLE 0
 
 /** A theme designed for monochrome displays */
-#define LV_USE_THEME_MONO 1
+#define LV_USE_THEME_MONO 0
 
 /*==================
  * LAYOUTS
