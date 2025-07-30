@@ -17,9 +17,6 @@ template <
     size_t height>
 class Display {
 public:
-    Display() {
-    }
-
     void backlight(float value) {
         backlight_pwm.pwm(value);
     }

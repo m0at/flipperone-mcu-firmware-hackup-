@@ -16,16 +16,36 @@ class Log {
 #define COLOR_CYAN   COLOR("36")
 
 private:
+    inline static SemaphoreHandle_t log_mutex = nullptr;
+    inline static StaticSemaphore_t log_mutex_data;
+
     static void print(const char* tag, const char* message, va_list args, bool append_newline = true) {
+        if(log_mutex == nullptr) {
+            print_no_mutex(tag, message, args, append_newline);
+        } else {
+            print_with_mutex(tag, message, args, append_newline);
+        }
+    }
+
+    static void print_no_mutex(const char* tag, const char* message, va_list args, bool append_newline = true) {
         printf("%ld", to_ms_since_boot(get_absolute_time()));
         printf(tag);
         vprintf(message, args);
         if(append_newline) printf("\n");
     }
 
+    static void print_with_mutex(const char* tag, const char* message, va_list args, bool append_newline = true) {
+        hard_assert(xSemaphoreTake(log_mutex, portMAX_DELAY));
+        print_no_mutex(tag, message, args, append_newline);
+        hard_assert(xSemaphoreGive(log_mutex));
+    }
+
 public:
     static void init(void) {
         stdio_init_all();
+        log_mutex = xSemaphoreCreateMutexStatic(&log_mutex_data);
+        hard_assert(log_mutex != NULL);
+
         printf(COLOR_GREEN);
         printf("\n");
         printf("--------------------------------\n");
