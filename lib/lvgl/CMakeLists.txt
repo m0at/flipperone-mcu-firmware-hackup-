@@ -11,6 +11,8 @@ target_sources(${PROJECT_NAME} INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/fonts/lv_font_profont_24.c
     ${CMAKE_CURRENT_SOURCE_DIR}/fonts/lv_font_haxrcorp4089_16.c
     ${CMAKE_CURRENT_SOURCE_DIR}/fonts/lv_font_helvetica_bold_12.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/fonts/lv_font_tiny_6.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/fonts/lv_font_tiny5_8.c
 )
 
 target_compile_options(${PROJECT_NAME} INTERFACE

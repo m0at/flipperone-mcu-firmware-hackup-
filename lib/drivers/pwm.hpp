@@ -40,7 +40,7 @@ public:
             pwm_value = max_value - pwm_value; // Invert the PWM value
         }
 
-        Log::debug("PWM %d: value: %d", pin, pwm_value);
+        Log::user("PWM %d: value: %d", pin, pwm_value);
         pwm_set_chan_level(slice_num, channel_num, pwm_value);
     }
 

@@ -10,6 +10,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "pico/multicore.h"
 
 #define WS2812_GPIO  2
 #define WS2812_COUNT 16
@@ -276,9 +277,31 @@ static uint32_t time_get_minutes() {
     return minutes % 60;
 }
 
+static void lv_rt_log(lv_log_level_t level, const char* buf) {
+    switch(level) {
+    case LV_LOG_LEVEL_TRACE:
+        Log::trace_no_newline("%s", buf);
+        break;
+    case LV_LOG_LEVEL_INFO:
+        Log::info_no_newline("%s", buf);
+        break;
+    case LV_LOG_LEVEL_WARN:
+        Log::warn_no_newline("%s", buf);
+        break;
+    case LV_LOG_LEVEL_ERROR:
+        Log::error_no_newline("%s", buf);
+        break;
+    case LV_LOG_LEVEL_USER:
+        Log::user_no_newline("%s", buf);
+        break;
+
+    default:
+        break;
+    }
+}
+
 static void task_main(void* arg) {
     Log::info("Starting main task...");
-
     hw_display.init();
     // hw_display.backlight(0.04f);
     hw_display.backlight(0.2f);
@@ -287,6 +310,12 @@ static void task_main(void* arg) {
     // hw_display.backlight(1.0f);
 
     lv_init();
+    lv_log_register_print_cb(lv_rt_log);
+
+    LV_IMG_DECLARE(statusbar256x12);
+    LV_IMG_DECLARE(graph_256x104);
+    LV_IMG_DECLARE(button_50x14);
+    LV_IMG_DECLARE(button_pressed_50x14);
 
     lv_tick_set_cb(lvgl_get_milliseconds_callback);
     lv_display_t* display1 = lv_display_create(D_WIDTH, D_HEIGHT);
@@ -308,7 +337,11 @@ static void task_main(void* arg) {
 
     lv_obj_t* top_bar = lv_obj_create(root);
     lv_obj_set_size(top_bar, D_WIDTH, 12);
-    lv_obj_set_style_bg_color(top_bar, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(top_bar, lv_color_hex(0x000000), LV_PART_MAIN);
+
+    lv_obj_t* top_bar_background = lv_image_create(top_bar);
+    lv_image_set_src(top_bar_background, &statusbar256x12);
+    lv_obj_align(top_bar_background, LV_ALIGN_CENTER, 0, 0);
 
     lv_obj_t* time = lv_label_create(top_bar);
     lv_label_set_text_fmt(time, "%02u:%02u", time_get_hours(), time_get_minutes());
@@ -320,20 +353,31 @@ static void task_main(void* arg) {
     lv_label_set_text(date, "WED 33 JUL");
     lv_obj_set_style_pad_top(date, 1, LV_PART_MAIN);
     lv_obj_set_style_text_color(date, lv_color_hex(0x000000), LV_PART_MAIN);
-    lv_obj_align(date, LV_ALIGN_RIGHT_MID, -40, 0);
+    lv_obj_align(date, LV_ALIGN_RIGHT_MID, -41, 0);
 
     lv_obj_t* battery_text = lv_label_create(top_bar);
     lv_label_set_text_fmt(battery_text, "%.0f%%", battery_percentage);
     lv_obj_set_style_pad_top(battery_text, 1, LV_PART_MAIN);
     lv_obj_set_style_text_color(battery_text, lv_color_hex(0x000000), LV_PART_MAIN);
-    lv_obj_align(battery_text, LV_ALIGN_RIGHT_MID, -2, 0);
+    lv_obj_align(battery_text, LV_ALIGN_RIGHT_MID, -2, -2);
+    lv_obj_set_style_text_font(battery_text, &lv_font_tiny5_8, LV_PART_MAIN);
+    // line under text
+    lv_obj_t* battery_line = lv_obj_create(top_bar);
+    lv_obj_set_size(battery_line, 2, 5);
+    lv_obj_set_style_bg_color(battery_line, lv_color_hex(0x000000), LV_PART_MAIN);
+    lv_obj_align(battery_line, LV_ALIGN_BOTTOM_RIGHT, -24, -3);
 
     lv_obj_t* desktop = lv_obj_create(root);
+    lv_obj_set_width(desktop, D_WIDTH);
     lv_obj_set_style_bg_color(desktop, lv_color_hex(0x000000), LV_PART_MAIN);
     lv_obj_set_flex_grow(desktop, 1);
 
+    lv_obj_t* desktop_background = lv_image_create(desktop);
+    lv_image_set_src(desktop_background, &graph_256x104);
+    lv_obj_align(desktop_background, LV_ALIGN_CENTER, 0, 0);
+
     lv_obj_t* bottom_bar = lv_obj_create(root);
-    lv_obj_set_size(bottom_bar, D_WIDTH, 16);
+    lv_obj_set_size(bottom_bar, D_WIDTH, 14);
     lv_obj_set_style_bg_color(bottom_bar, lv_color_hex(0x000000), LV_PART_MAIN);
     lv_obj_set_flex_flow(bottom_bar, LV_FLEX_FLOW_ROW);
     lv_obj_set_layout(bottom_bar, LV_LAYOUT_FLEX);
@@ -342,29 +386,28 @@ static void task_main(void* arg) {
     const char* button_texts[] = {"CANCEL", "SEARCH", "MENU", "VERBOSE", "START"};
     const size_t button_count = sizeof(button_texts) / sizeof(button_texts[0]);
 
-    lv_obj_t* container[button_count];
+    typedef struct {
+        lv_obj_t* container;
+        lv_obj_t* image;
+        lv_obj_t* label;
+    } ButtonContainer;
+
+    ButtonContainer buttons[button_count];
 
     for(size_t i = 0; i < button_count; i++) {
-        container[i] = lv_obj_create(bottom_bar);
-        lv_obj_set_style_bg_color(container[i], lv_color_hex(0x000000), LV_PART_MAIN);
-        lv_obj_set_style_text_color(container[i], lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-        lv_obj_set_style_border_color(container[i], lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-        lv_obj_set_style_border_width(container[i], 1, LV_PART_MAIN);
-        lv_obj_set_size(container[i], (D_WIDTH / button_count) - 1, 17);
-        lv_obj_set_style_margin_left(container[i], 1, LV_PART_MAIN);
+        buttons[i].container = lv_obj_create(bottom_bar);
+        lv_obj_set_size(buttons[i].container, 50, 14);
+        lv_obj_set_style_text_color(buttons[i].container, lv_color_hex(0x000000), LV_PART_MAIN);
 
-        lv_obj_t* label = lv_label_create(container[i]);
-        lv_label_set_text(label, button_texts[i]);
-        lv_obj_set_style_text_font(label, &lv_font_profont_12, LV_PART_MAIN);
-        lv_obj_center(label);
+        buttons[i].image = lv_image_create(buttons[i].container);
+        lv_image_set_src(buttons[i].image, &button_50x14);
+        lv_obj_set_style_margin_left(buttons[i].container, 1, LV_PART_MAIN);
+
+        buttons[i].label = lv_label_create(buttons[i].image);
+        lv_label_set_text(buttons[i].label, button_texts[i]);
+        lv_obj_set_style_text_font(buttons[i].label, &lv_font_profont_12, LV_PART_MAIN);
+        lv_obj_center(buttons[i].label);
     }
-
-    // /*Create a white label, set its text and align it to the center*/
-    // lv_obj_t* label = lv_label_create(lv_screen_active());
-    // lv_label_set_text(label, "Need help, buddy?\nasdasd");
-    // lv_obj_set_style_text_font(label, &lv_font_profont_12, LV_PART_MAIN);
-    // lv_obj_set_style_text_color(label, lv_color_hex(0xffffff), LV_PART_MAIN);
-    // lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 
     Keys keys = {
         B_KEY1,
@@ -392,20 +435,26 @@ static void task_main(void* arg) {
             keys.poll();
         }
         KeysInfo info = keys.get_keys_info();
-        if(info.pressed.contains(BAT_CHARGING_GPIO)) charging = false;
-        if(info.released.contains(BAT_CHARGING_GPIO)) charging = true;
+        if(info.pressed.contains(BAT_CHARGING_GPIO)) {
+            Log::info("Battery charging stopped");
+            charging = false;
+        }
+        if(info.released.contains(BAT_CHARGING_GPIO)) {
+            Log::info("Battery charging started");
+            charging = true;
+        }
 
         std::initializer_list<uint32_t> key_list = {B_KEY1, B_KEY2, B_KEY3, B_KEY4, B_KEY5};
 
         size_t i = 0;
         for(auto key : key_list) {
             if(info.pressed.contains(key)) {
-                lv_obj_set_style_bg_color(container[i], lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-                lv_obj_set_style_text_color(container[i], lv_color_hex(0x000000), LV_PART_MAIN);
+                lv_image_set_src(buttons[i].image, &button_pressed_50x14);
+                lv_obj_set_style_text_color(buttons[i].container, lv_color_hex(0x000000), LV_PART_MAIN);
             }
             if(info.released.contains(key)) {
-                lv_obj_set_style_bg_color(container[i], lv_color_hex(0x000000), LV_PART_MAIN);
-                lv_obj_set_style_text_color(container[i], lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+                lv_image_set_src(buttons[i].image, &button_50x14);
+                lv_obj_set_style_text_color(buttons[i].container, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
             }
             i++;
         }
@@ -413,17 +462,11 @@ static void task_main(void* arg) {
         lv_label_set_text_fmt(time, "%02u:%02u", time_get_hours(), time_get_minutes());
 
         lv_label_set_text_fmt(battery_text, "%.0f%%", battery_percentage);
-
-        // for(auto key : info.pressed) {
-        //     Log::info("Key pressed: %u", key);
-        // }
-
-        // for(auto key : info.released) {
-        //     Log::info("Key released: %u", key);
-        // }
-
-        // hw_display.write_buffer(buffer);
-        // vTaskDelay(pdMS_TO_TICKS(10));
+        size_t battery_height = 6 * (battery_percentage / 100.0f);
+        if(battery_height > 5) {
+            battery_height = 5; // maximum height
+        }
+        lv_obj_set_height(battery_line, battery_height);
 
         uint32_t time_till_next = lv_timer_handler();
         if(time_till_next == LV_NO_TIMER_READY) time_till_next = LV_DEF_REFR_PERIOD; /*handle LV_NO_TIMER_READY. Another option is to `sleep` for longer*/
@@ -434,7 +477,13 @@ static void task_main(void* arg) {
 int main() {
     Log::init();
 
-    xTaskCreate(task_main, "task_main", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
+    xTaskCreate(task_main, "task_main", 1024 * 8, NULL, configMAX_PRIORITIES - 1, NULL);
+
+    // somehow openocd fucks up the multicore reset
+    // so we need to reset core1 manually
+    sleep_ms(5);
+    multicore_reset_core1();
+    (void)multicore_fifo_pop_blocking();
 
     vTaskStartScheduler();
 

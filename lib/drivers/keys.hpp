@@ -66,7 +66,7 @@ public:
 
 private:
     const std::initializer_list<uint32_t> keys;
-    volatile bool need_update = false;
+    volatile bool need_update = true;
     uint32_t last_state = 0;
     uint32_t current_state = 0;
 };

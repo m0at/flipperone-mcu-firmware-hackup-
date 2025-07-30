@@ -3,20 +3,24 @@
 #include <pico/time.h>
 #include <stdarg.h>
 #include <pico/stdlib.h>
+#include <FreeRTOS.h>
+#include <semphr.h>
 
 class Log {
-#define COLOR(clr)  "\033[0;" clr "m"
-#define COLOR_RESET "\033[0m"
-#define COLOR_RED   COLOR("31")
-#define COLOR_GREEN COLOR("32")
-#define COLOR_BROWN COLOR("33")
+#define COLOR(clr)   "\033[0;" clr "m"
+#define COLOR_RESET  "\033[0m"
+#define COLOR_RED    COLOR("31")
+#define COLOR_GREEN  COLOR("32")
+#define COLOR_BROWN  COLOR("33")
+#define COLOR_PURPLE COLOR("35")
+#define COLOR_CYAN   COLOR("36")
 
 private:
-    static void print(const char* tag, const char* message, va_list args) {
+    static void print(const char* tag, const char* message, va_list args, bool append_newline = true) {
         printf("%ld", to_ms_since_boot(get_absolute_time()));
         printf(tag);
         vprintf(message, args);
-        printf("\n");
+        if(append_newline) printf("\n");
     }
 
 public:
@@ -30,6 +34,20 @@ public:
         printf(COLOR_RESET);
     }
 
+    static void trace(const char* message, ...) {
+        va_list args;
+        va_start(args, message);
+        print(COLOR_PURPLE " [T] " COLOR_RESET, message, args);
+        va_end(args);
+    }
+
+    static void warn(const char* message, ...) {
+        va_list args;
+        va_start(args, message);
+        print(COLOR_BROWN " [W] " COLOR_RESET, message, args);
+        va_end(args);
+    }
+
     static void info(const char* message, ...) {
         va_list args;
         va_start(args, message);
@@ -37,17 +55,52 @@ public:
         va_end(args);
     }
 
-    static void debug(const char* message, ...) {
-        va_list args;
-        va_start(args, message);
-        print(COLOR_BROWN " [D] " COLOR_RESET, message, args);
-        va_end(args);
-    }
-
     static void error(const char* message, ...) {
         va_list args;
         va_start(args, message);
         print(COLOR_RED " [E] " COLOR_RESET, message, args);
+        va_end(args);
+    }
+
+    static void user(const char* message, ...) {
+        va_list args;
+        va_start(args, message);
+        print(COLOR_CYAN " [U] " COLOR_RESET, message, args);
+        va_end(args);
+    }
+
+    static void trace_no_newline(const char* message, ...) {
+        va_list args;
+        va_start(args, message);
+        print(COLOR_PURPLE " [T] " COLOR_RESET, message, args, false);
+        va_end(args);
+    }
+
+    static void warn_no_newline(const char* message, ...) {
+        va_list args;
+        va_start(args, message);
+        print(COLOR_BROWN " [W] " COLOR_RESET, message, args, false);
+        va_end(args);
+    }
+
+    static void info_no_newline(const char* message, ...) {
+        va_list args;
+        va_start(args, message);
+        print(COLOR_GREEN " [I] " COLOR_RESET, message, args, false);
+        va_end(args);
+    }
+
+    static void error_no_newline(const char* message, ...) {
+        va_list args;
+        va_start(args, message);
+        print(COLOR_RED " [E] " COLOR_RESET, message, args, false);
+        va_end(args);
+    }
+
+    static void user_no_newline(const char* message, ...) {
+        va_list args;
+        va_start(args, message);
+        print(COLOR_CYAN " [U] " COLOR_RESET, message, args, false);
         va_end(args);
     }
 };

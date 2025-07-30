@@ -99,7 +99,7 @@ extern "C" {
 #define configMESSAGE_BUFFER_LENGTH_TYPE size_t
 
 /* Memory allocation related definitions. */
-#define configSUPPORT_STATIC_ALLOCATION  0
+#define configSUPPORT_STATIC_ALLOCATION  1
 #define configSUPPORT_DYNAMIC_ALLOCATION 1
 #define configTOTAL_HEAP_SIZE            (UINT32_MAX)
 #define configAPPLICATION_ALLOCATED_HEAP 0
@@ -123,6 +123,7 @@ extern "C" {
 #define configTIMER_TASK_PRIORITY    (configMAX_PRIORITIES - 1)
 #define configTIMER_QUEUE_LENGTH     10
 #define configTIMER_TASK_STACK_DEPTH 512
+#define configIDLE_TASK_STACK_DEPTH  512
 
 /* Interrupt nesting behaviour configuration. */
 /*  The Cortex-M0+ implements the two most significant bits of an 8-bit priority field, 

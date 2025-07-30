@@ -173,16 +173,16 @@
      * - gradients use RGB888
      * - bitmaps with transparency may use ARGB8888
      */
-    #define LV_DRAW_SW_SUPPORT_RGB565       0
+    #define LV_DRAW_SW_SUPPORT_RGB565       1
     #define LV_DRAW_SW_SUPPORT_RGB565_SWAPPED       0
     #define LV_DRAW_SW_SUPPORT_RGB565A8     0
     #define LV_DRAW_SW_SUPPORT_RGB888       0
     #define LV_DRAW_SW_SUPPORT_XRGB8888     0
-    #define LV_DRAW_SW_SUPPORT_ARGB8888     0
+    #define LV_DRAW_SW_SUPPORT_ARGB8888     1
     #define LV_DRAW_SW_SUPPORT_ARGB8888_PREMULTIPLIED 0
     #define LV_DRAW_SW_SUPPORT_L8           1
     #define LV_DRAW_SW_SUPPORT_AL88         0
-    #define LV_DRAW_SW_SUPPORT_A8           1
+    #define LV_DRAW_SW_SUPPORT_A8           0
     #define LV_DRAW_SW_SUPPORT_I1           0
 
     /* The threshold of the luminance to consider a pixel as
@@ -371,7 +371,7 @@
  *-----------*/
 
 /** Enable log module */
-#define LV_USE_LOG 0
+#define LV_USE_LOG 1
 #if LV_USE_LOG
     /** Set value to one of the following levels of logging detail:
      *  - LV_LOG_LEVEL_TRACE    Log detailed information.
@@ -462,7 +462,7 @@
 
 /** Default number of image header cache entries. The cache is used to store the headers of images
  *  The main logic is like `LV_CACHE_DEF_SIZE` but for image headers. */
-#define LV_IMAGE_HEADER_CACHE_DEF_CNT 0
+#define LV_IMAGE_HEADER_CACHE_DEF_CNT 10
 
 /** Number of stops allowed per gradient. Increase this to allow more stops.
  *  This adds (sizeof(lv_color_t) + 1) bytes per additional stop. */
@@ -630,6 +630,8 @@
  *  @endcode
  */
 #define LV_FONT_CUSTOM_DECLARE \
+    LV_FONT_DECLARE(lv_font_tiny_6) \
+    LV_FONT_DECLARE(lv_font_tiny5_8) \
     LV_FONT_DECLARE(lv_font_helvetica_bold_12) \
     LV_FONT_DECLARE(lv_font_profont_12) \
     LV_FONT_DECLARE(lv_font_profont_24) \
@@ -883,9 +885,9 @@
 #endif
 
 /** API for memory-mapped file access. */
-#define LV_USE_FS_MEMFS 0
+#define LV_USE_FS_MEMFS 1
 #if LV_USE_FS_MEMFS
-    #define LV_FS_MEMFS_LETTER '\0'     /**< Set an upper-case driver-identifier letter for this driver (e.g. 'A'). */
+    #define LV_FS_MEMFS_LETTER 'M'     /**< Set an upper-case driver-identifier letter for this driver (e.g. 'A'). */
 #endif
 
 /** API for LittleFs. */

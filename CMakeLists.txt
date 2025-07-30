@@ -37,8 +37,10 @@ pico_sdk_init()
 # Add executable. Default name is the project name, version 0.1
 
 file(GLOB_RECURSE SOURCES
+    "app/*.c"
+    "app/theme/*.c"
+    "app/fs/*.c"
     "app/*.c*"
-    "app/theme/*.c*"
 )
 
 add_executable(one-rp2350-control 
@@ -70,6 +72,7 @@ target_include_directories(one-rp2350-control PRIVATE
 add_subdirectory(lib/ws2812)
 add_subdirectory(lib/freertos)
 add_subdirectory(lib/lvgl)
+add_subdirectory(assets)
 
 # Add the standard library to the build
 target_link_libraries(one-rp2350-control
@@ -81,6 +84,7 @@ target_link_libraries(one-rp2350-control
     ws2812
     freertos
     lvgl_lib
+    assets
 )
 
 

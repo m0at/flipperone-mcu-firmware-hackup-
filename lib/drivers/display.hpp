@@ -235,7 +235,7 @@ private:
     }
 
     inline void write_command(uint8_t command) {
-        if(!initialized && init_log_enabled) Log::debug("CMD: 0x%02x", command);
+        if(!initialized && init_log_enabled) Log::user("CMD: 0x%02x", command);
         cs(false);
         dc(false);
         spi_write_blocking(spi, &command, 1);
@@ -243,7 +243,7 @@ private:
     }
 
     inline void write_data(uint8_t data) {
-        if(!initialized && init_log_enabled) Log::debug("DAT: 0x%02x", data);
+        if(!initialized && init_log_enabled) Log::user("DAT: 0x%02x", data);
         cs(false);
         dc(true);
         spi_write_blocking(spi, &data, 1);
