@@ -1,3 +1,4 @@
+#include "core/check.h"
 #include <furi.h>
 #include <furi_hal.h>
 //#include <flipper.h>
@@ -56,6 +57,7 @@ static void task_main(void* arg) {
         //     Log::info("Key1 is pressed");
         // }
     }
+    furi_crash();
 }
 
 int main(void) {

@@ -2,71 +2,8 @@
 #include <furi_hal_gpio.h>
 #include <hardware/exception.h>
 #include <hardware/adc.h>
-// // #include <furi_hal_version.h>
-// #include <furi_hal_resources.h>
-// #include <stm32u5xx_ll_exti.h>
-// #include <stm32u5xx_ll_pwr.h>
-// // #include <stm32u5xx_ll_comp.h>
-
-// static uint32_t furi_hal_gpio_invalid_argument_crash(void) {
-//     furi_crash("Invalid argument");
-//     return 0;
-// }
-
-// #define GPIO_PORT_MAP(port, prefix)              \
-//     (((port) == (GPIOA)) ? (uint32_t)prefix##A : \
-//      ((port) == (GPIOB)) ? (uint32_t)prefix##B : \
-//      ((port) == (GPIOC)) ? (uint32_t)prefix##C : \
-//      ((port) == (GPIOD)) ? (uint32_t)prefix##D : \
-//      ((port) == (GPIOE)) ? (uint32_t)prefix##E : \
-//      ((port) == (GPIOF)) ? (uint32_t)prefix##F : \
-//      ((port) == (GPIOG)) ? (uint32_t)prefix##G : \
-//      ((port) == (GPIOH)) ? (uint32_t)prefix##H : \
-//      ((port) == (GPIOI)) ? (uint32_t)prefix##I : \
-//      ((port) == (GPIOJ)) ? (uint32_t)prefix##J : \
-//                            furi_hal_gpio_invalid_argument_crash())
-
-// #define GPIO_PIN_MAP(pin, prefix)               \
-//     (((pin) == (LL_GPIO_PIN_0))  ? prefix##0 :  \
-//      ((pin) == (LL_GPIO_PIN_1))  ? prefix##1 :  \
-//      ((pin) == (LL_GPIO_PIN_2))  ? prefix##2 :  \
-//      ((pin) == (LL_GPIO_PIN_3))  ? prefix##3 :  \
-//      ((pin) == (LL_GPIO_PIN_4))  ? prefix##4 :  \
-//      ((pin) == (LL_GPIO_PIN_5))  ? prefix##5 :  \
-//      ((pin) == (LL_GPIO_PIN_6))  ? prefix##6 :  \
-//      ((pin) == (LL_GPIO_PIN_7))  ? prefix##7 :  \
-//      ((pin) == (LL_GPIO_PIN_8))  ? prefix##8 :  \
-//      ((pin) == (LL_GPIO_PIN_9))  ? prefix##9 :  \
-//      ((pin) == (LL_GPIO_PIN_10)) ? prefix##10 : \
-//      ((pin) == (LL_GPIO_PIN_11)) ? prefix##11 : \
-//      ((pin) == (LL_GPIO_PIN_12)) ? prefix##12 : \
-//      ((pin) == (LL_GPIO_PIN_13)) ? prefix##13 : \
-//      ((pin) == (LL_GPIO_PIN_14)) ? prefix##14 : \
-//      ((pin) == (LL_GPIO_PIN_15)) ? prefix##15 : \
-//                                    furi_hal_gpio_invalid_argument_crash())
-
-// #define GET_EXTI_EXTI_PORT(port) GPIO_PORT_MAP(port, LL_EXTI_EXTI_PORT)
-// #define GET_EXTI_EXTI_LINE(pin)  GPIO_PIN_MAP(pin, LL_EXTI_EXTI_LINE)
-// #define GET_EXTI_LINE(pin)       GPIO_PIN_MAP(pin, LL_EXTI_LINE_)
-
-// #define GET_PWR_PORT(port) GPIO_PORT_MAP(port, LL_PWR_GPIO_PORT)
-// #define GET_PWR_PIN(pin)   GPIO_PIN_MAP(pin, LL_PWR_GPIO_PIN_)
-
-// typedef struct {
-//     GpioExtiCallback callback;
-// } GpioExtiCallbackHandler;
-// typedef void (*GpioInterruptCallbackHandler)(uint gpio, uint32_t event_mask);
 
 static volatile GpioInterrupt gpio_interrupt[GPIO_NUMBER];
-// static volatile GpioInterruptCallbackHandler gpio_interrupt_callback_handler[GPIO_NUMBER];
-
-// static uint8_t furi_hal_gpio_get_pin_num(const GpioPin* gpio) {
-//     uint8_t pin_num = 0;
-//     for(pin_num = 0; pin_num < GPIO_NUMBER; pin_num++) {
-//         if(gpio->pin & (1 << pin_num)) break;
-//     }
-//     return pin_num;
-// }
 
 void furi_hal_gpio_callback(uint gpio, uint32_t event_mask);
 

@@ -13,7 +13,7 @@
  */
 #pragma once
 
-//#include <m-core.h>
+#include <m-core.h>
 #include "common_defines.h"
 
 #ifdef __cplusplus

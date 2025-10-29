@@ -72,6 +72,7 @@ target_include_directories(one-rp2350-control PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/lib/furi
     ${CMAKE_CURRENT_LIST_DIR}/targets/f100/src
     ${CMAKE_CURRENT_LIST_DIR}/targets/f100/furi_hal
+    ${CMAKE_CURRENT_LIST_DIR}/targets/f100/config
     
 )
 

@@ -58,133 +58,133 @@
 // extern size_t xPortGetTotalHeapSize(void);
 
 // static void __furi_print_register_info(void) {
-//     // Print registers
-//     for(uint8_t i = 0; i < 12; i++) {
-//         furi_log_puts("\r\n\tr");
-//         furi_log_putu32(i);
-//         furi_log_puts(" : ");
-//         furi_log_puthex32(__furi_check_registers[i]);
-//     }
+//     // // Print registers
+//     // for(uint8_t i = 0; i < 12; i++) {
+//     //     furi_log_puts("\r\n\tr");
+//     //     furi_log_putu32(i);
+//     //     furi_log_puts(" : ");
+//     //     furi_log_puthex32(__furi_check_registers[i]);
+//     // }
 
-//     furi_log_puts("\r\n\tlr : ");
-//     furi_log_puthex32(__furi_check_registers[12]);
+//     // furi_log_puts("\r\n\tlr : ");
+//     // furi_log_puthex32(__furi_check_registers[12]);
 // }
 
 // static void __furi_print_stack_info(void) {
-//     furi_log_puts("\r\n\tstack watermark: ");
-//     furi_log_putu32(uxTaskGetStackHighWaterMark(NULL) * 4);
+//     // furi_log_puts("\r\n\tstack watermark: ");
+//     // furi_log_putu32(uxTaskGetStackHighWaterMark(NULL) * 4);
 // }
 
 // static void __furi_print_heap_info(void) {
-//     furi_log_puts("\r\n\t     heap total: ");
-//     furi_log_putu32(xPortGetTotalHeapSize());
-//     furi_log_puts("\r\n\t      heap free: ");
-//     furi_log_putu32(xPortGetFreeHeapSize());
-//     furi_log_puts("\r\n\t heap watermark: ");
-//     furi_log_putu32(xPortGetMinimumEverFreeHeapSize());
-//     furi_log_puts("\r\n\n");
+//     // furi_log_puts("\r\n\t     heap total: ");
+//     // furi_log_putu32(xPortGetTotalHeapSize());
+//     // furi_log_puts("\r\n\t      heap free: ");
+//     // furi_log_putu32(xPortGetFreeHeapSize());
+//     // furi_log_puts("\r\n\t heap watermark: ");
+//     // furi_log_putu32(xPortGetMinimumEverFreeHeapSize());
+//     // furi_log_puts("\r\n\n");
 // }
 
 // static void __furi_print_name(bool isr) {
-//     if(isr) {
-//         uint8_t exception_number = __get_IPSR();
-//         const char* name = furi_hal_interrupt_get_name(exception_number);
-//         furi_log_puts("[ISR ");
-//         if(name) {
-//             furi_log_puts(name);
-//         } else {
-//             furi_log_putu32(__get_IPSR());
-//         }
-//         furi_log_puts("] ");
-//     } else {
-//         const char* name = pcTaskGetName(NULL);
-//         if(name == NULL) {
-//             furi_log_puts("[main] ");
-//         } else {
-//             furi_log_puts("[");
-//             furi_log_puts(name);
-//             furi_log_puts("] ");
-//         }
-//     }
+//     // if(isr) {
+//     //     uint8_t exception_number = __get_IPSR();
+//     //     const char* name = furi_hal_interrupt_get_name(exception_number);
+//     //     furi_log_puts("[ISR ");
+//     //     if(name) {
+//     //         furi_log_puts(name);
+//     //     } else {
+//     //         furi_log_putu32(__get_IPSR());
+//     //     }
+//     //     furi_log_puts("] ");
+//     // } else {
+//     //     const char* name = pcTaskGetName(NULL);
+//     //     if(name == NULL) {
+//     //         furi_log_puts("[main] ");
+//     //     } else {
+//     //         furi_log_puts("[");
+//     //         furi_log_puts(name);
+//     //         furi_log_puts("] ");
+//     //     }
+//     // }
 // }
 
 // FURI_WEAK void furi_crash_handler() {
-//     furi_log_puts("No additional crash handler defined.\r\n");
+//     //furi_log_puts("No additional crash handler defined.\r\n");
 // }
 
 // FURI_NORETURN void __furi_crash_implementation(void) {
-//     __disable_irq();
-//     GET_MESSAGE_AND_STORE_REGISTERS();
+// //     __disable_irq();
+// //     GET_MESSAGE_AND_STORE_REGISTERS();
 
-//     bool isr = FURI_IS_IRQ_MODE();
+// //     bool isr = FURI_IS_IRQ_MODE();
 
-//     if(__furi_check_message == NULL) {
-//         __furi_check_message = "Fatal Error";
-//     } else if(__furi_check_message == (void*)__FURI_ASSERT_MESSAGE_FLAG) {
-//         __furi_check_message = "furi_assert failed";
-//     } else if(__furi_check_message == (void*)__FURI_CHECK_MESSAGE_FLAG) {
-//         __furi_check_message = "furi_check failed";
-//     }
+// //     if(__furi_check_message == NULL) {
+// //         __furi_check_message = "Fatal Error";
+// //     } else if(__furi_check_message == (void*)__FURI_ASSERT_MESSAGE_FLAG) {
+// //         __furi_check_message = "furi_assert failed";
+// //     } else if(__furi_check_message == (void*)__FURI_CHECK_MESSAGE_FLAG) {
+// //         __furi_check_message = "furi_check failed";
+// //     }
 
-//     furi_log_puts("\r\n\033[0;31m[CRASH]");
-//     __furi_print_name(isr);
-//     furi_log_puts(__furi_check_message);
+// //     furi_log_puts("\r\n\033[0;31m[CRASH]");
+// //     __furi_print_name(isr);
+// //     furi_log_puts(__furi_check_message);
 
-//     __furi_print_register_info();
-//     if(!isr) {
-//         __furi_print_stack_info();
-//     }
-//     __furi_print_heap_info();
+// //     __furi_print_register_info();
+// //     if(!isr) {
+// //         __furi_print_stack_info();
+// //     }
+// //     __furi_print_heap_info();
 
-//     furi_crash_handler();
+// //     furi_crash_handler();
 
-//     // Check if debug enabled by DAP
-//     // https://developer.arm.com/documentation/ddi0403/d/Debug-Architecture/ARMv7-M-Debug/Debug-register-support-in-the-SCS/Debug-Halting-Control-and-Status-Register--DHCSR?lang=en
-//     bool debug = CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk;
-// #ifndef FURI_DEBUG
-//     if(debug) {
-// #endif
-//         furi_log_puts("\r\nSystem halted. Connect debugger for more info\r\n");
-//         furi_log_puts("\033[0m\r\n");
-//         furi_hal_debug_enable();
+// //     // Check if debug enabled by DAP
+// //     // https://developer.arm.com/documentation/ddi0403/d/Debug-Architecture/ARMv7-M-Debug/Debug-register-support-in-the-SCS/Debug-Halting-Control-and-Status-Register--DHCSR?lang=en
+// //     bool debug = CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk;
+// // #ifndef FURI_DEBUG
+// //     if(debug) {
+// // #endif
+// //         furi_log_puts("\r\nSystem halted. Connect debugger for more info\r\n");
+// //         furi_log_puts("\033[0m\r\n");
+// //         furi_hal_debug_enable();
 
-//         RESTORE_REGISTERS_AND_HALT_MCU(debug);
-// #ifndef FURI_DEBUG
-//     } else {
-//         uint32_t ptr = (uint32_t)__furi_check_message;
-//         if(ptr < (uint32_t)furi_hal_flash_get_base() ||
-//            ptr > (uint32_t)furi_hal_flash_get_free_end_address()) {
-//             ptr = (uint32_t) "Check serial logs";
-//         }
-//         furi_hal_nvm_set_fault_data(ptr);
-//         furi_log_puts("\r\nRebooting system.\r\n");
-//         furi_log_puts("\033[0m\r\n");
-//         furi_hal_power_reset();
-//     }
-// #endif
-//     __builtin_unreachable();
+// //         RESTORE_REGISTERS_AND_HALT_MCU(debug);
+// // #ifndef FURI_DEBUG
+// //     } else {
+// //         uint32_t ptr = (uint32_t)__furi_check_message;
+// //         if(ptr < (uint32_t)furi_hal_flash_get_base() ||
+// //            ptr > (uint32_t)furi_hal_flash_get_free_end_address()) {
+// //             ptr = (uint32_t) "Check serial logs";
+// //         }
+// //         furi_hal_nvm_set_fault_data(ptr);
+// //         furi_log_puts("\r\nRebooting system.\r\n");
+// //         furi_log_puts("\033[0m\r\n");
+// //         furi_hal_power_reset();
+// //     }
+// // #endif
+// //     __builtin_unreachable();
 // }
 
 // FURI_NORETURN void __furi_halt_implementation(void) {
-//     __disable_irq();
-//     GET_MESSAGE_AND_STORE_REGISTERS();
+//     // __disable_irq();
+//     // GET_MESSAGE_AND_STORE_REGISTERS();
 
-//     bool isr = FURI_IS_IRQ_MODE();
+//     // bool isr = FURI_IS_IRQ_MODE();
 
-//     if(__furi_check_message == NULL) {
-//         __furi_check_message = "System halt requested.";
-//     }
+//     // if(__furi_check_message == NULL) {
+//     //     __furi_check_message = "System halt requested.";
+//     // }
 
-//     furi_log_puts("\r\n\033[0;31m[HALT]");
-//     __furi_print_name(isr);
-//     furi_log_puts(__furi_check_message);
-//     furi_log_puts("\r\nSystem halted. Bye-bye!\r\n");
-//     furi_log_puts("\033[0m\r\n");
+//     // furi_log_puts("\r\n\033[0;31m[HALT]");
+//     // __furi_print_name(isr);
+//     // furi_log_puts(__furi_check_message);
+//     // furi_log_puts("\r\nSystem halted. Bye-bye!\r\n");
+//     // furi_log_puts("\033[0m\r\n");
 
-//     // Check if debug enabled by DAP
-//     // https://developer.arm.com/documentation/ddi0403/d/Debug-Architecture/ARMv7-M-Debug/Debug-register-support-in-the-SCS/Debug-Halting-Control-and-Status-Register--DHCSR?lang=en
-//     bool debug = CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk;
-//     furi_log_putu32(debug);
+//     // // Check if debug enabled by DAP
+//     // // https://developer.arm.com/documentation/ddi0403/d/Debug-Architecture/ARMv7-M-Debug/Debug-register-support-in-the-SCS/Debug-Halting-Control-and-Status-Register--DHCSR?lang=en
+//     // bool debug = CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk;
+//     // furi_log_putu32(debug);
 
-//     __builtin_unreachable();
+//     // __builtin_unreachable();
 // }
