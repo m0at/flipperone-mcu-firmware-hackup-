@@ -40,7 +40,9 @@ file(GLOB_RECURSE SOURCES
     "app/*.c"
     "app/theme/*.c"
     "app/fs/*.c"
-    "app/*.c*"
+    "lib/furi/core/*.c*" 
+    "targets/f100/src/*.c*" 
+    "targets/f100/furi_hal/*.c*" 
 )
 
 add_executable(one-rp2350-control 
@@ -67,6 +69,10 @@ pico_enable_stdio_usb(one-rp2350-control 1)
 target_include_directories(one-rp2350-control PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/lib
     ${CMAKE_CURRENT_LIST_DIR}/lib/freertos
+    ${CMAKE_CURRENT_LIST_DIR}/lib/furi
+    ${CMAKE_CURRENT_LIST_DIR}/targets/f100/src
+    ${CMAKE_CURRENT_LIST_DIR}/targets/f100/furi_hal
+    
 )
 
 add_subdirectory(lib/ws2812)

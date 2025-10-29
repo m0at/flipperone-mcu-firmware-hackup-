@@ -14,30 +14,32 @@
 #include "pico/multicore.h"
 
 #define WS2812_GPIO  2
-#define WS2812_COUNT 16
+#define WS2812_COUNT 30//16
 
-#define D_PIN_CTRL  8
-#define D_PIN_SDA   7
-#define D_PIN_SCL   6
-#define D_PIN_RESET 5
-#define D_PIN_WR    4
-#define D_PIN_CS    3
-#define D_WIDTH     258
-#define D_HEIGHT    144
+#define D_PIN_CTRL  35 //8
+#define D_PIN_SDA   19 //7
+#define D_PIN_SCL   18 //6
+#define D_PIN_RESET 12 //5
+#define D_PIN_WR    13 //4
+#define D_PIN_CS    17 //3
+// #define D_WIDTH     258
+// #define D_HEIGHT    144
+#define D_WIDTH     240
+#define D_HEIGHT    240
 #define D_OFF_X     77
 #define D_OFF_Y     (320 - D_HEIGHT) // was 0 without mirroring and rotation
 
 #define B_KEY1       15
 #define B_KEY2       14
-#define B_KEY3       13
-#define B_KEY4       12
+#define B_KEY3       8//13
+#define B_KEY4       7//12
 #define B_KEY5       11
 #define B_KEY_SW     10
 #define B_KEY_UP     9
 #define B_KEY_LEFT   16
-#define B_KEY_CENTER 17
-#define B_KEY_RIGHT  18
-#define B_KEY_DOWN   19
+#define B_KEY_CENTER 6//17
+#define B_KEY_RIGHT  5//18
+#define B_KEY_DOWN   4//19
 #define B_KEY_BACK   20
 
 #define GPIO_NORMAL_BLACK 21
@@ -67,7 +69,7 @@ typedef enum {
     Max,
 } LedType;
 
-static_assert(Max == WS2812_COUNT, "WS2812 strip count does not match LedType enum");
+//static_assert(Max == WS2812_COUNT, "WS2812 strip count does not match LedType enum");
 
 void set_pixel_color(uint8_t* buffer, int32_t x, int32_t y, uint8_t color) {
     if(x >= D_WIDTH || y >= D_HEIGHT || x < 0 || y < 0) {
@@ -146,6 +148,8 @@ static void task_charging(void* arg) {
     strip.set_rgb(LedType::BatteryWatt3, WS2812Colors::orange);
     strip.set_rgb(LedType::BatteryWatt4, WS2812Colors::red);
     strip.flush();
+
+        charging=true;
 
     while(true) {
         if(charging) {
@@ -643,7 +647,7 @@ static void task_main(void* arg) {
     }
 }
 
-int main() {
+int main1() {
     Log::init();
 
     xTaskCreate(task_main, "task_main", 1024 * 8, NULL, configMAX_PRIORITIES - 1, NULL);

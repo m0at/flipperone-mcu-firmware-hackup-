@@ -80,6 +80,8 @@ public:
             st7789s_initialize_2025_04_01_normal_white();
         }
 
+        st7789_initialize();
+
         freq = spi_set_baudrate(spi, 75 * 1000 * 1000);
         Log::info("SPI%d initialized with frequency: %.2f MHz", SPI_NUM(spi), freq / 1000000.0f);
 
@@ -295,6 +297,54 @@ private:
 #define SSD_Start()
 #define SSD_Stop()
 #define Delayms(ms) sleep_ms(ms)
+
+void st7789_initialize(void) {
+//static const uint8_t st7789_init_seq[] = {
+        // 1, 20, 0x01,                        // Software reset
+        // 1, 10, 0x11,                        // Exit sleep mode
+        // 2, 2, 0x3a, 0x55,                   // Set colour mode to 16 bit
+        // 2, 0, 0x36, 0x00,                   // Set MADCTL: row then column, refresh is bottom to top ????
+        // 5, 0, 0x2a, 0x00, 0x00,             // CASET: column addresses
+        //     SCREEN_WIDTH >> 8, SCREEN_WIDTH & 0xff,
+        // 5, 0, 0x2b, 0x00, 0x00,             // RASET: row addresses
+        //     SCREEN_HEIGHT >> 8, SCREEN_HEIGHT & 0xff,
+        // 1, 2, 0x21,                         // Inversion on, then 10 ms delay (supposedly a hack?)
+        // 1, 2, 0x13,                         // Normal display on, then 10 ms delay
+        // 1, 2, 0x29,                         // Main screen turn on, then wait 500 ms
+        // 0                                   // Terminate list
+
+        SSD_CMD(0x01); // Software reset
+        Delayms(20);
+
+        SSD_CMD(0x11); // Sleep out
+        Delayms(10);
+
+        // SSD_CMD(0x3A); // Interface Pixel Format
+        // SSD_PAR(0x55); // 16 bit/pixel
+
+        // SSD_CMD(0x36); // Memory Data Access Control
+        // SSD_PAR(0x00); // row then column, refresh is bottom to top
+
+        // SSD_CMD(0x2A); // Column Address Set
+        // SSD_PAR(0x00);
+        // SSD_PAR(0x00);
+        // SSD_PAR(width >> 8);
+        // SSD_PAR(width & 0xff);
+
+        // SSD_CMD(0x2B); // Row Address Set
+        // SSD_PAR(0x00);
+        // SSD_PAR(0x00);
+        // SSD_PAR(height >> 8);
+        // SSD_PAR(height & 0xff);
+
+        SSD_CMD(0x21); // Display Inversion On
+        Delayms(2);
+        SSD_CMD(0x13); // Normal Display Mode On
+        Delayms(2);
+        SSD_CMD(0x29); // Display On
+        Delayms(2);
+
+}
 
     void st7789s_initialize_2025_04_01_normal_black(void) {
         //SET_PASSWD
